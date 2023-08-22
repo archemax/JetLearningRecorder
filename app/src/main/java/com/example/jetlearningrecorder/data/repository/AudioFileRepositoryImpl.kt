@@ -4,8 +4,9 @@ import com.example.jetlearningrecorder.data.data_source.AudioFileDao
 import com.example.jetlearningrecorder.domain.model.AudioFile
 import com.example.jetlearningrecorder.domain.repository.AudioFileRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class AudioFileRepositoryImpl(
+class AudioFileRepositoryImpl @Inject constructor(
     private val dao: AudioFileDao
 ): AudioFileRepository {
     override fun getAudioFiles(): Flow<List<AudioFile>> {
@@ -21,6 +22,6 @@ class AudioFileRepositoryImpl(
     }
 
     override suspend fun deleteAudioFile(audioFile: AudioFile) {
-        dao.deleteNote(audioFile)
+        dao.deleteAudioFile(audioFile)
     }
 }

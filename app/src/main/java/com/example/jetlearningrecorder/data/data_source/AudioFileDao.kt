@@ -1,7 +1,6 @@
 package com.example.jetlearningrecorder.data.data_source
 
 import androidx.room.Dao
-import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -22,6 +21,6 @@ interface AudioFileDao {
     suspend fun insertAudioFile(audioFile: AudioFile)
 
     @Delete
-    suspend fun deleteNote(audioFile: AudioFile)
+    suspend fun deleteAudioFile(audioFile: AudioFile)
 
 }

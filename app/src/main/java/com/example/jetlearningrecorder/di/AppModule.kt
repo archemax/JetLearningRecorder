@@ -11,6 +11,7 @@ import com.example.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -21,31 +22,31 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideContext(app: Application): Context {
-        return app.applicationContext
-    }
-
-
-    @Provides
-    @Singleton
-    fun provideAudioFileDatabase(app: Application): AudioFileDatabase {
+    fun provideAudioFileDatabase(
+        @ApplicationContext context: Context
+    ): AudioFileDatabase {
         return Room.databaseBuilder(
-            app,
+            context,
             AudioFileDatabase::class.java,
-             AudioFileDatabase.DATABASE_NAME
+            AudioFileDatabase.DATABASE_NAME
         ).build()
     }
 
     @Provides
+    fun provideAudioFileDao(
+        audioFileDatabase: AudioFileDatabase
+    ) = audioFileDatabase.audioFileDao
+
+    @Provides
     @Singleton
-    fun provideAudioFileRepository(db: AudioFileDatabase): AudioFileRepository{
+    fun provideAudioFileRepository(db: AudioFileDatabase): AudioFileRepository {
         return AudioFileRepositoryImpl(db.audioFileDao)
     }
 
     //use case
     @Provides
     @Singleton
-    fun provideInsertAudioFileUseCase(repository: AudioFileRepository): InsertAudioFileUseCase{
+    fun provideInsertAudioFileUseCase(repository: AudioFileRepository): InsertAudioFileUseCase {
         return InsertAudioFileUseCase(repository)
     }
 }

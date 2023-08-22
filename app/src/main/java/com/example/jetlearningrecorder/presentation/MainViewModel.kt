@@ -1,47 +1,69 @@
 package com.example.jetlearningrecorder.presentation
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.jetlearningrecorder.data.audioRecorder.AndroidAudioRecorder
+import com.example.jetlearningrecorder.domain.model.AudioFile
+import com.example.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-
-import java.io.File
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-
+    private val insertAudioFileUseCase: InsertAudioFileUseCase
 ) : ViewModel() {
 
-    private val _recordingState = MutableStateFlow(RecordingState.STOPPED)
-    val recordingState: StateFlow<RecordingState>
-        get() = _recordingState.asStateFlow()
+
+    private var currentFileName: String? = null
+    private var currentFilePath: String? = null
 
     private var androidAudioRecorder: AndroidAudioRecorder? = null
+    private var isRecording = false
 
     fun startRecording(context: Context) {
+
         androidAudioRecorder = AndroidAudioRecorder(context = context)
-        androidAudioRecorder?.startRecording()
-        _recordingState.value = RecordingState.STARTED
+        val (fileName, filePath) = androidAudioRecorder?.startRecording() ?: return
+        currentFileName = fileName
+        currentFilePath = filePath
+
+        isRecording = true
+        Log.d("AAA", "recordig stated file name = $currentFileName ; filePath = $currentFilePath")
     }
 
     fun stoppedRecording() {
-        androidAudioRecorder?.stopRecording()
-        _recordingState.value = RecordingState.STOPPED
+        androidAudioRecorder?.stopRecording()?.let { (fileName, filePath) ->
+            currentFileName = fileName
+            currentFilePath = filePath
+
+            isRecording = false
+
+
+        }
+
+
     }
 
+    fun insertAudioFileToDb() {
+        if (currentFileName != null && currentFilePath != null) {
+            val audioFile = AudioFile(filePath = currentFilePath!!, title = currentFileName!!)
+            viewModelScope.launch {
+                insertAudioFileUseCase(audioFile)
+                Log.d(
+                    "AAA",
+                    "FILE INSERTED file name = $currentFileName ; filePath = $currentFilePath"
+                )
+            }
+
+        }
+
+
+    }
 }
 
-enum class RecordingState {
-    STARTED,
-    STOPPED
-}
+
 
