@@ -9,4 +9,6 @@ interface AudioFileRepository {
     suspend fun getAudioFileById(id: Int): AudioFile?
     suspend fun insertAudioFile(audioFile: AudioFile)
     suspend fun deleteAudioFile(audioFile: AudioFile)
+
+    suspend fun getLastInsertedAudioFile(): AudioFile?
 }

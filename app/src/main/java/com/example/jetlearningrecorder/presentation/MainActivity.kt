@@ -99,6 +99,7 @@ fun MainApp() {
                 if (isRecording) {
                     viewModel.stoppedRecording()
                     viewModel.insertAudioFileToDb()
+                    viewModel.playLastRecordedAudioFile()
                     isRecording = false
                 }
                 Toast.makeText(context, "STOPPED", Toast.LENGTH_LONG).show()

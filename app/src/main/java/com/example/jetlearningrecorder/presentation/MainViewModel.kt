@@ -2,11 +2,15 @@ package com.example.jetlearningrecorder.presentation
 
 import android.content.Context
 import android.util.Log
+import android.util.LogPrinter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.jetlearningrecorder.data.audioPlayer.AndroidAudioPlayer
 import com.example.jetlearningrecorder.data.audioRecorder.AndroidAudioRecorder
 import com.example.jetlearningrecorder.domain.model.AudioFile
+import com.example.jetlearningrecorder.domain.repository.AudioFileRepository
 import com.example.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
+import com.example.jetlearningrecorder.domain.useCase.PlayLastRecordedAudioUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +18,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val insertAudioFileUseCase: InsertAudioFileUseCase
+    private val insertAudioFileUseCase: InsertAudioFileUseCase,
+    private val playLastRecordedAudioUseCase: PlayLastRecordedAudioUseCase,
+    private val audioPlayer: AndroidAudioPlayer
 ) : ViewModel() {
 
 
@@ -39,13 +45,8 @@ class MainViewModel @Inject constructor(
         androidAudioRecorder?.stopRecording()?.let { (fileName, filePath) ->
             currentFileName = fileName
             currentFilePath = filePath
-
             isRecording = false
-
-
         }
-
-
     }
 
     fun insertAudioFileToDb() {
@@ -60,8 +61,13 @@ class MainViewModel @Inject constructor(
             }
 
         }
+    }
 
+    fun playLastRecordedAudioFile (){
+        viewModelScope.launch {
+            playLastRecordedAudioUseCase()
 
+        }
     }
 }
 

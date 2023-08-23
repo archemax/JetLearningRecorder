@@ -24,4 +24,8 @@ class AudioFileRepositoryImpl @Inject constructor(
     override suspend fun deleteAudioFile(audioFile: AudioFile) {
         dao.deleteAudioFile(audioFile)
     }
+
+    override suspend fun getLastInsertedAudioFile(): AudioFile? {
+        return dao.getLastInsertedAudioFile()
+    }
 }

@@ -3,16 +3,19 @@ package com.example.jetlearningrecorder.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import com.example.jetlearningrecorder.data.audioPlayer.AndroidAudioPlayer
 import com.example.jetlearningrecorder.data.data_source.AudioFileDatabase
 import com.example.jetlearningrecorder.data.repository.AudioFileRepositoryImpl
 import com.example.jetlearningrecorder.domain.repository.AudioFileRepository
 
 import com.example.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
+import com.example.jetlearningrecorder.domain.useCase.PlayLastRecordedAudioUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+
 import javax.inject.Singleton
 
 @Module
@@ -49,4 +52,21 @@ object AppModule {
     fun provideInsertAudioFileUseCase(repository: AudioFileRepository): InsertAudioFileUseCase {
         return InsertAudioFileUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    fun provideLastRecordedAudioFileUseCase (
+        repository: AudioFileRepository,
+        audioPlayer: AndroidAudioPlayer
+    ): PlayLastRecordedAudioUseCase {
+        return PlayLastRecordedAudioUseCase(repository, audioPlayer)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAndroidAudioPlayer (@ApplicationContext context: Context
+    ):  AndroidAudioPlayer{
+        return AndroidAudioPlayer(context)
+    }
+
 }
