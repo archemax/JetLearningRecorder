@@ -13,7 +13,7 @@ class AudioFileRepositoryImpl @Inject constructor(
         return dao.getFiles()
     }
 
-    override suspend fun getAudioFileById(id: Int): AudioFile? {
+    override suspend fun playAudioFileById(id: Int): AudioFile? {
         return dao.getAudioFileById(id)
     }
 
@@ -27,5 +27,9 @@ class AudioFileRepositoryImpl @Inject constructor(
 
     override suspend fun getLastInsertedAudioFile(): AudioFile? {
         return dao.getLastInsertedAudioFile()
+    }
+
+    override suspend fun deleteAllAudioFiles() {
+        dao.deleteAllAudioFiles()
     }
 }

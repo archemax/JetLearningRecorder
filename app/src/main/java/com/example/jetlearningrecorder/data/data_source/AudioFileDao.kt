@@ -1,5 +1,6 @@
 package com.example.jetlearningrecorder.data.data_source
 
+
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -22,6 +23,10 @@ interface AudioFileDao {
 
     @Delete
     suspend fun deleteAudioFile(audioFile: AudioFile)
+
+    @Query ("DELETE FROM audioFile")
+    suspend fun deleteAllAudioFiles ()
+
 
     @Query ("SELECT * FROM audioFile ORDER BY id DESC LIMIT 1")
     suspend fun getLastInsertedAudioFile(): AudioFile?

@@ -1,14 +1,15 @@
 package com.example.jetlearningrecorder.di
 
-import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import com.example.jetlearningrecorder.data.audioPlayer.AndroidAudioPlayer
 import com.example.jetlearningrecorder.data.data_source.AudioFileDatabase
 import com.example.jetlearningrecorder.data.repository.AudioFileRepositoryImpl
 import com.example.jetlearningrecorder.domain.repository.AudioFileRepository
-
+import com.example.jetlearningrecorder.domain.useCase.DeleteAllAudioFilesUseCase
+import com.example.jetlearningrecorder.domain.useCase.GetAudioFilesUseCase
 import com.example.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
+import com.example.jetlearningrecorder.domain.useCase.PlayAudioFileUseCase
 import com.example.jetlearningrecorder.domain.useCase.PlayLastRecordedAudioUseCase
 import dagger.Module
 import dagger.Provides
@@ -46,7 +47,7 @@ object AppModule {
         return AudioFileRepositoryImpl(db.audioFileDao)
     }
 
-    //use case
+    // ---- use cases -----//////////////////////////////////////////////////////////////
     @Provides
     @Singleton
     fun provideInsertAudioFileUseCase(repository: AudioFileRepository): InsertAudioFileUseCase {
@@ -55,7 +56,31 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLastRecordedAudioFileUseCase (
+    fun providePlayAudioFileUseCase(
+        repository: AudioFileRepository,
+        audioPlayer: AndroidAudioPlayer
+    ): PlayAudioFileUseCase {
+        return PlayAudioFileUseCase(
+            repository,
+            audioPlayer)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAudioFilesUseCase(repository: AudioFileRepository): GetAudioFilesUseCase {
+        return GetAudioFilesUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeleteAllAudioFilesUseCase(repository: AudioFileRepository): DeleteAllAudioFilesUseCase {
+        return DeleteAllAudioFilesUseCase(repository)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideLastRecordedAudioFileUseCase(
         repository: AudioFileRepository,
         audioPlayer: AndroidAudioPlayer
     ): PlayLastRecordedAudioUseCase {
@@ -64,9 +89,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAndroidAudioPlayer (@ApplicationContext context: Context
-    ):  AndroidAudioPlayer{
+    fun provideAndroidAudioPlayer(
+        @ApplicationContext context: Context
+    ): AndroidAudioPlayer {
         return AndroidAudioPlayer(context)
     }
+
+
 
 }
