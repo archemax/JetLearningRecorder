@@ -1,9 +1,15 @@
+@file:OptIn(
+    ExperimentalTime::class, ExperimentalTime::class, ExperimentalTime::class,
+    ExperimentalTime::class
+)
+
 package com.example.jetlearningrecorder.presentation
+
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -22,8 +28,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,10 +42,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.jetlearningrecorder.R
@@ -44,6 +54,7 @@ import com.example.jetlearningrecorder.navigation.AppNavGraph
 import com.example.jetlearningrecorder.navigation.Screen
 import com.example.jetlearningrecorder.ui.theme.JetLearningRecorderTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.time.ExperimentalTime
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -53,6 +64,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val REQUEST_CODE = 123
     }
+
+    @OptIn(ExperimentalTime::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -62,10 +75,12 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navHostController = rememberNavController()
-                    StartScreen(navHostController)
+                    val viewModel: MainViewModel = hiltViewModel()
+                    StartScreen(navHostController, viewModel)
                 }
             }
         }
+
 
         permissioGranted = ActivityCompat.checkSelfPermission(
             this,
@@ -76,24 +91,38 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
-fun StartScreen(navHostController: NavHostController) {
+fun StartScreen(navHostController: NavHostController, viewModel: MainViewModel) {
     val context = LocalContext.current
     AppNavGraph(
         navHostController = navHostController,
-        homeScreenContent = { MainApp(navHostController) },
+        homeScreenContent = { MainApp(navHostController, viewModel) },
         listScreenContent = { RecordsListScreen() })
 
 }
 
-
+@OptIn(ExperimentalTime::class)
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun MainApp(navController: NavHostController) {
-
-    val viewModel: MainViewModel = hiltViewModel()
+fun MainApp(
+    navController: NavHostController,
+    viewModel: MainViewModel
+) {
     val context = LocalContext.current
     var isRecording by remember { mutableStateOf(false) }
+
+
+    val isPlayingLastRecordedAudio = viewModel.isPlayingLastRecordedAudio.observeAsState(false)
+    Log.d("Ma_state", "${isPlayingLastRecordedAudio.value}")
+    var recorderCurrentMode by remember { mutableStateOf("") }
+
+    LaunchedEffect(isPlayingLastRecordedAudio.value) {
+        // Reset recorderCurrentMode when isPlayingLastRecordedAudio changes
+        if (!isPlayingLastRecordedAudio.value) {
+            recorderCurrentMode = ""
+        }
+    }
 
 
     Column(
@@ -101,31 +130,53 @@ fun MainApp(navController: NavHostController) {
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(modifier = Modifier.padding(bottom = 200.dp)) {
+            Text(viewModel.hours, fontSize = 30.sp)
+            Text(":", fontSize = 30.sp)
+            Text(viewModel.minutes, fontSize = 30.sp)
+            Text(":", fontSize = 30.sp)
+            Text(viewModel.seconds, fontSize = 30.sp)
+        }
+        Text(
+            text = recorderCurrentMode,
+            style = TextStyle(Color.Gray),
+            fontSize = 20.sp
+        )
+
         Row(
             modifier = Modifier
                 .padding(22.dp)
-                .background(color = Color.Green)
+
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
 
-
         ) {
             if (isRecording) {
-                StopButton(onClick = {
-                    viewModel.stoppedRecording()
-                    viewModel.insertAudioFileToDb()
-                    viewModel.playLastRecordedAudioFile()
-                    isRecording = false
+                StopButton(
+                    onClick = {
+                        isRecording = false
+                        viewModel.stoppedRecording()
+                        viewModel.insertAudioFileToDb()
+                        viewModel.playLastRecordedAudioFile()
+                        viewModel.stopTimer()
+                        recorderCurrentMode = "playing back..."
+                    },
 
-                })
+                    )
             } else {
-                RecordButton(onClick = {
-                    isRecording = true
-                    viewModel.startRecording(context)
-                    Toast.makeText(
-                        context, "recording started", Toast.LENGTH_LONG
-                    ).show()
-                })
+                RecordButton(
+                    onClick = {
+                        isRecording = true
+                        viewModel.startRecording(context)
+                        recorderCurrentMode = "recording..."
+                        viewModel.startTimer()
+                    },
+                    enabled = !isPlayingLastRecordedAudio.value
+
+
+                )
+
+
             }
         }
     }
@@ -138,38 +189,55 @@ fun MainApp(navController: NavHostController) {
     ) {
         Image(painter = painterResource(id = R.drawable.menu_menu_44),
             contentDescription = null,
-            modifier = Modifier.clickable{
+            modifier = Modifier.clickable {
                 navController.navigate(Screen.ListScreen.route)
-            } )
+            })
 
     }
 
 }
-
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 @Composable
-fun RoundButton(onClick: () -> Unit, buttonColor: Color) {
+fun RoundButton(
+    onClick: () -> Unit,
+    buttonColor: Color,
+    enabled: Boolean
+
+) {
     Canvas(
         modifier = Modifier
             .size(100.dp)
             .clip(RoundedCornerShape(50))
-            .clickable(onClick = onClick),
-        onDraw = { drawCircle(color = buttonColor) })
+            .clickable(onClick = onClick, enabled = enabled),
+
+        onDraw = { drawCircle(color = if (enabled) buttonColor else Color.Gray) })
+
 }
 
 @Composable
-fun RecordButton(onClick: () -> Unit) {
-    RoundButton(onClick = onClick, buttonColor = Color.Red)
+fun RecordButton(
+    onClick: () -> Unit,
+    buttonColor: Color = Color.Red,
+    enabled: Boolean
+
+) {
+    RoundButton(
+        onClick = onClick,
+        buttonColor = buttonColor,
+        enabled = enabled
+    )
 }
+
 
 @Composable
 fun StopButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .clickable(onClick = onClick)
+            .clickable {
+                onClick()
+            }
             .size(100.dp)
             .background(Color.Gray, shape = CircleShape),
 
@@ -183,3 +251,5 @@ fun StopButton(onClick: () -> Unit) {
     }
 
 }
+
+

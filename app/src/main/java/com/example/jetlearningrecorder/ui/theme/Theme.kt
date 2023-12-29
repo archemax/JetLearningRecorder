@@ -1,5 +1,6 @@
 package com.example.jetlearningrecorder.ui.theme
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -37,6 +38,7 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun JetLearningRecorderTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -44,7 +46,9 @@ fun JetLearningRecorderTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    //use only light theme
+    val colorScheme = LightColorScheme
+    when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)

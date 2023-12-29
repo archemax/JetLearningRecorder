@@ -3,6 +3,7 @@ package com.example.jetlearningrecorder.di
 import android.content.Context
 import androidx.room.Room
 import com.example.jetlearningrecorder.data.audioPlayer.AndroidAudioPlayer
+import com.example.jetlearningrecorder.data.audioRecorder.AndroidAudioRecorder
 import com.example.jetlearningrecorder.data.data_source.AudioFileDatabase
 import com.example.jetlearningrecorder.data.repository.AudioFileRepositoryImpl
 import com.example.jetlearningrecorder.domain.repository.AudioFileRepository
@@ -73,8 +74,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDeleteAllAudioFilesUseCase(repository: AudioFileRepository): DeleteAllAudioFilesUseCase {
-        return DeleteAllAudioFilesUseCase(repository)
+    fun provideDeleteAllAudioFilesUseCase(
+        repository: AudioFileRepository,
+        androidAudioRecorder: AndroidAudioRecorder
+        ): DeleteAllAudioFilesUseCase {
+        return DeleteAllAudioFilesUseCase(repository,androidAudioRecorder)
     }
 
 
@@ -93,6 +97,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): AndroidAudioPlayer {
         return AndroidAudioPlayer(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAndroidAudioRecorder(
+        @ApplicationContext context: Context
+    ): AndroidAudioRecorder {
+        return AndroidAudioRecorder(context)
     }
 
 

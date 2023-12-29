@@ -10,8 +10,8 @@ class PlayAudioFileUseCase(
     suspend operator fun invoke(audioFileId: Int) {
         val selectedAudioFile = repository.playAudioFileById(audioFileId)
 
-        selectedAudioFile?.let { selectedAudioFile ->
-            audioPlayer.playAudio(selectedAudioFile.filePath)
+        selectedAudioFile?.let { file ->
+            audioPlayer.playAudio(file.filePath)
         }
     }
 }
