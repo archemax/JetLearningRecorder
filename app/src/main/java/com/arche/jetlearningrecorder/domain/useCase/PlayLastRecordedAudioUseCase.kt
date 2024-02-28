@@ -10,9 +10,9 @@ class PlayLastRecordedAudioUseCase @Inject constructor(
     private val audioPlayer: AndroidAudioPlayer
 ) {
 
-    suspend operator fun invoke (){
+    suspend operator fun invoke() {
         val lastRecordedAudio = repository.getLastInsertedAudioFile()
-        lastRecordedAudio?.let{audioFile ->
+        lastRecordedAudio?.let { audioFile ->
             audioPlayer.playAudio(audioFile.filePath)
         }
     }

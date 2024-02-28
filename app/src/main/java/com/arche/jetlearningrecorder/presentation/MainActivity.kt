@@ -9,7 +9,6 @@ package com.arche.jetlearningrecorder.presentation
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -45,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -54,7 +54,10 @@ import com.arche.jetlearningrecorder.navigation.AppNavGraph
 import com.arche.jetlearningrecorder.navigation.Screen
 import com.arche.jetlearningrecorder.ui.theme.JetLearningRecorderTheme
 import com.example.jetlearningrecorder.presentation.RecordsListScreen
-
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.time.ExperimentalTime
 
@@ -72,6 +75,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetLearningRecorderTheme {
+
+
+                
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -79,6 +85,9 @@ class MainActivity : ComponentActivity() {
                     val navHostController = rememberNavController()
                     val viewModel: MainViewModel = hiltViewModel()
                     StartScreen(navHostController, viewModel)
+
+                    MobileAds.initialize(this)
+                    //ShowAds(modifier = Modifier.fillMaxSize(), adId ="ca-app-pub-3940256099942544/6300978111" )
                 }
             }
         }
@@ -100,7 +109,7 @@ fun StartScreen(navHostController: NavHostController, viewModel: MainViewModel) 
     AppNavGraph(
         navHostController = navHostController,
         homeScreenContent = { MainApp(navHostController, viewModel) },
-        listScreenContent = { RecordsListScreen() })
+        listScreenContent = { RecordsListScreen(navController = navHostController) })
 
 }
 
@@ -116,8 +125,10 @@ fun MainApp(
 
 
     val isPlayingLastRecordedAudio = viewModel.isPlayingLastRecordedAudio.observeAsState(false)
-    Log.d("Ma_state", "${isPlayingLastRecordedAudio.value}")
+    //Log.d("Ma_state", "${isPlayingLastRecordedAudio.value}")
     var recorderCurrentMode by remember { mutableStateOf("") }
+
+
 
     LaunchedEffect(isPlayingLastRecordedAudio.value) {
         // Reset recorderCurrentMode when isPlayingLastRecordedAudio changes
@@ -126,20 +137,42 @@ fun MainApp(
         }
     }
 
+    Row (
+        modifier = Modifier.fillMaxWidth()
+            ){
+        ShowAds(modifier = Modifier, adId = "ca-app-pub-4187563943965256/9435520160")
+
+    }
+
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        // the main column
+        modifier = Modifier
+            .fillMaxSize()
+        //    .background(Color.Green)
+        ,
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(modifier = Modifier.padding(bottom = 200.dp)) {
+
+        Row(
+            modifier = Modifier
+                .padding(bottom = 200.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(viewModel.hours, fontSize = 30.sp)
             Text(":", fontSize = 30.sp)
-            Text(viewModel.minutes, fontSize = 30.sp, )
+            Text(viewModel.minutes, fontSize = 30.sp)
             Text(":", fontSize = 30.sp)
             Text(viewModel.seconds, fontSize = 30.sp)
+
+
         }
+
+
         Text(
+
             text = recorderCurrentMode,
             style = TextStyle(Color.Gray),
             fontSize = 20.sp
@@ -155,12 +188,13 @@ fun MainApp(
             if (isRecording) {
                 StopButton(
                     onClick = {
+
+                        viewModel.insertFileToDbAndPlayIt()
                         isRecording = false
                         viewModel.stoppedRecording()
-                        viewModel.insertAudioFileToDb()
-                        viewModel.playLastRecordedAudioFile()
                         viewModel.stopTimer()
                         recorderCurrentMode = "playing back..."
+
                     },
 
                     )
@@ -181,24 +215,59 @@ fun MainApp(
 
             }
         }
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(end = 16.dp, top = 16.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.Top
-    ) {
-        Image(painter = painterResource(id = R.drawable.menu_menu_44),
-            contentDescription = null,
-            modifier = Modifier.clickable {
-                navController.navigate(Screen.ListScreen.route)
-            })
+
+
+
+
+
+
+
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 22.dp, end = 22.dp),
+                //.background(Color.Red)
+
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.Top
+        ) {
+
+            Image(painter = painterResource(id = R.drawable.menu_menu_44),
+                contentDescription = null,
+                modifier = Modifier.clickable {
+                    navController.navigate(Screen.ListScreen.route)
+                })
+
+        }
 
     }
+
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+@Composable
+fun ShowAds(
+    modifier: Modifier,
+    adId: String
+) {
+    Column() {
+        AndroidView(
+            modifier = Modifier.fillMaxWidth(),
+            factory = {context->
+                AdView(context).apply {
+                    setAdSize(AdSize.BANNER)
+                    adUnitId = adId
+                    loadAd(AdRequest.Builder().build())
+                }
+
+            }
+        )
+    }
+
+}
 
 @Composable
 fun RoundButton(

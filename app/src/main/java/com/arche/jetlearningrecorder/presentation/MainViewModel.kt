@@ -1,7 +1,6 @@
 package com.arche.jetlearningrecorder.presentation
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,7 +13,6 @@ import com.arche.jetlearningrecorder.data.audioRecorder.AndroidAudioRecorder
 import com.arche.jetlearningrecorder.domain.model.AudioFile
 import com.arche.jetlearningrecorder.domain.useCase.InsertAudioFileUseCase
 import com.arche.jetlearningrecorder.domain.useCase.PlayLastRecordedAudioUseCase
-
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.Timer
@@ -39,7 +37,7 @@ class MainViewModel @Inject constructor(
     init {
         audioPlayer.isPlaying.observeForever { playingFromPlayer ->
             _isPlayingLastRecordedAudio.value = playingFromPlayer
-            Log.d("ViewModel_isPlayingLastRecordedAudio", "${_isPlayingLastRecordedAudio.value}")
+            //Log.d("ViewModel_isPlayingLastRecordedAudio", "${_isPlayingLastRecordedAudio.value}")
         }
     }
 
@@ -100,7 +98,7 @@ class MainViewModel @Inject constructor(
         currentFilePath = filePath
 
         isRecording = true
-        Log.d("AAA", "recordig stated file name = $currentFileName ; filePath = $currentFilePath")
+        //Log.d("AAA", "recordig stated file name = $currentFileName ; filePath = $currentFilePath")
     }
 
     fun stoppedRecording() {
@@ -111,23 +109,33 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun insertAudioFileToDb() {
-        if (currentFileName != null && currentFilePath != null) {
-            val audioFile = AudioFile(filePath = currentFilePath!!, title = currentFileName!!)
-            viewModelScope.launch {
-                insertAudioFileUseCase(audioFile)
-                Log.d(
-                    "AAA",
-                    "FILE INSERTED file name = $currentFileName ; filePath = $currentFilePath"
-                )
-            }
+
+    fun insertFileToDbAndPlayIt() {
+        viewModelScope.launch {
+            insertAudioFileToDb()
         }
     }
 
-    fun playLastRecordedAudioFile() {
+
+    private suspend fun insertAudioFileToDb() {
+        if (currentFileName != null && currentFilePath != null) {
+            val audioFile = AudioFile(filePath = currentFilePath!!, title = currentFileName!!)
+
+            val insertJob = viewModelScope.launch {
+                insertAudioFileUseCase(audioFile)
+
+            }
+            insertJob.join()
+            playLastRecordedAudioFile()
+        }
+    }
+
+
+    private suspend fun playLastRecordedAudioFile() {
         viewModelScope.launch {
             playLastRecordedAudioUseCase()
         }
+
     }
 }
 

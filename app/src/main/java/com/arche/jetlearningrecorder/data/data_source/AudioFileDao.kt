@@ -29,7 +29,7 @@ interface AudioFileDao {
     suspend fun deleteAllAudioFiles ()
 
 
-    @Query ("SELECT * FROM audioFile ORDER BY id DESC LIMIT 1")
+    @Query ("SELECT * FROM audioFile ORDER BY id DESC LIMIT 2")
     suspend fun getLastInsertedAudioFile(): AudioFile?
 
 }

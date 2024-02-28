@@ -1,5 +1,6 @@
 package com.example.jetlearningrecorder.presentation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,20 +21,25 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.arche.jetlearningrecorder.R
 import com.arche.jetlearningrecorder.domain.model.AudioFile
 import com.arche.jetlearningrecorder.presentation.RecordsListScreen.RecordsListScreenViewModel
+import com.arche.jetlearningrecorder.presentation.ShowAds
 
 
 @Composable
 fun RecordsListScreen(
     viewModel: RecordsListScreenViewModel = hiltViewModel(),
-
-    ) {
+    navController: NavHostController
+) {
     val audioFilesState = viewModel.audioFilesState.collectAsState()
     val openDialog = remember { mutableStateOf(false) }
 
@@ -42,15 +48,41 @@ fun RecordsListScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ShowAds(modifier = Modifier, adId = "ca-app-pub-4187563943965256/9435520160")
+
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+//new line
+            //verticalAlignment = Alignment.CenterVertically,
+
         ) {
+            Image(
+                modifier = Modifier
+                    .padding(0.dp)
+                    .clickable(onClick = {
+                        navController.popBackStack()
+                    })
+                    .padding(12.dp),
+                alignment = Alignment.Center,
+                painter = painterResource(id = R.drawable.arrow_back_24),
+                contentDescription = "back button",
+
+
+                )
+
             Text(
                 text = "List of Records: ",
                 modifier = Modifier.padding(8.dp),
+                //modifier = Modifier.weight(1f),
                 fontSize = 22.sp
             )
             Button(onClick = { openDialog.value = true }) {
